@@ -24,3 +24,16 @@ a1_stack = torch.stack([a1, a1, a1], dim=1) #stack
 a1_squeeze = a1_stack.squeeze() #remove all single dimensions
 x = torch.rand(2,3,2)
 a1_permute  = torch.permute(x, (1,0,2)).size()
+
+x = torch.arange(1,10,1).reshape(1,3,3)
+ele1 = x[0][0][0] # [outer][middle][inner] : get all values
+array = np.arange(1,8)
+tensor = torch.from_numpy(array) #numpy -> tensor(float32 default)
+numpy_tensor  = tensor.numpy() #tensor -> numpy
+
+random_seed = 12
+torch.manual_seed(random_seed) #reproducible 
+t1 = torch.rand(3,4)
+torch.manual_seed(random_seed)
+t2 = torch.rand(3,4)
+print(torch.cuda.is_available())
