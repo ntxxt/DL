@@ -107,6 +107,6 @@ for epoch in range(epochs):
         test_pred = model2(X_test)
         #loss
         test_loss = loss_fn(test_pred, y_test)
-        print(test_loss)
+        #print(test_loss)
 
 
