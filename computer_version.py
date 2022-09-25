@@ -88,14 +88,14 @@ class CNNmodel(nn.Module):
             nn.MaxPool2d(kernel_size=2))
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(in_features=hidden_units, out_features=output_shapes))
+            nn.Linear(in_features=hidden_units*7*7, out_features=output_shapes))
     
     def forward(self, x):
         x = self.block_1(x)
-        print(x.shape)
+        #print(x.shape)
         x = self.block_2(x)
         x = self.classifier(x)
-        print(x.shape)
+        #print(x.shape)
         return x
     
 
@@ -103,18 +103,78 @@ class CNNmodel(nn.Module):
 image = torch.rand(size=(32,3,64,64))
 #print(image.shape)
 test_image = image[0]
-print(test_image.shape)
+#print(test_image.shape)
 #kernel=filter stribe=move amount at a time
 conv_layer = nn.Conv2d(in_channels=3, out_channels=10, kernel_size=3, stride=1, padding=0) #color channel (3)
 cov_output = conv_layer(test_image)
-print(cov_output.shape)
+#print(cov_output.shape)
 #max pool layer
 maxpool = nn.MaxPool2d(kernel_size=2)
 maxpool_output = maxpool(cov_output) 
-print(maxpool_output.shape)
+#print(maxpool_output.shape)
 
 #number of channel in images, black and white dataset this is one 
 model2 = CNNmodel(input_shape=1, hidden_units=10, output_shapes=10)
-rand_image_tensor = torch.randn(size=(1,28,28))
-model2(rand_image_tensor)
+
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(params=model2.parameters(), lr=0.1)
+
+
+def train_step(model: torch.nn.Module,
+               data_loader: torch.utils.data.DataLoader,
+               loss_fn: torch.nn.Module,
+               optimizer: torch.optim.Optimizer
+               ):
+    train_loss = 0
+    for batch, (X, y) in enumerate(data_loader):
+        # 1. Forward pass
+        y_pred = model(X)
+
+        # 2. Calculate loss
+        loss = loss_fn(y_pred, y)
+        train_loss += loss
+
+        # 3. Optimizer zero grad
+        optimizer.zero_grad()
+
+        # 4. Loss backward
+        loss.backward()
+
+        # 5. Optimizer step
+        optimizer.step()
+
+    # Calculate loss and accuracy per epoch and print out what's happening
+    train_loss /= len(data_loader)
+    print(train_loss)
+
+def test_step(data_loader: torch.utils.data.DataLoader,
+              model: torch.nn.Module,
+              loss_fn: torch.nn.Module):
+    test_loss =0
+    model.eval() # put model in eval mode
+    # Turn on inference context manager
+    with torch.inference_mode(): 
+        for X, y in data_loader:
+            # 1. Forward pass
+            test_pred = model(X)          
+            # 2. Calculate loss and accuracy
+            test_loss += loss_fn(test_pred, y)
+         # Go from logits -> pred labels
+        
+        
+        # Adjust metrics and print out
+        test_loss /= len(data_loader)
+        print(test_loss)
+
+epochs = 3
+for epoch in range(epochs):
+    print(f"Epoch: {epoch}\n---------")
+    train_step(data_loader=train_dataloader, 
+        model=model2, 
+        loss_fn=loss_fn,
+        optimizer=optimizer
+    )
+    test_step(data_loader=test_dataloader,
+        model=model2,
+        loss_fn=loss_fn)
 
