@@ -6,7 +6,7 @@
 #pull -> shink
 #SOM retain topology of data; reveal relations that are not easily identified; learns without superision; no backpropagation
 #no lateral connections between output nodes; 
-#k-means++ random selection of centroids at first will not affect the outcome result
+#k-means++ random selection of centroids at first will not affect the result
 #select the correct number of centriods; WCSS, centriods increase, better fit; pick where the changes happen;
 
 #case: if the customer cheats or not
