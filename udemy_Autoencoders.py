@@ -25,9 +25,12 @@ training_dataset = pd.read_csv('/Users/xiaotongxu/Downloads/ml-100k/u1.base', de
 training_dataset = np.array(training_dataset, dtype='int')
 test_dataset = pd.read_csv('/Users/xiaotongxu/Downloads/ml-100k/u1.test', delimiter='\t')
 test_dataset = np.array(test_dataset, dtype='int')
+print(test_dataset[0])
+print(test_dataset.shape)
 
-nb_users = int(max(max(training_dataset[:,0]), max(test_dataset[:,0])))
-nb_moives = int(max(max(training_dataset[:,1]), max(test_dataset[:,1])))
+nb_users = int(max(max(training_dataset[:,0], ), max(test_dataset[:,0])))
+nb_moives = int(max(max(training_dataset[:,1], ), max(test_dataset[:,1])))
+print(nb_users, nb_moives)
 
 def gen_matrix(dataset):
     new_data = []   
@@ -44,60 +47,61 @@ train_matrix = gen_matrix(training_dataset)
 #matrix -> torch tensors
 training_set = torch.FloatTensor(train_matrix)
 test_set = torch.FloatTensor(test_matrix)
-
+print(training_set[0])
+print(training_set.shape)
 
 class SAE(nn.Module):
-	def __init__(self, ):
-		super(SAE, self).__init__()
-		self.fc1 = nn.Linear(nb_moives, 20)
-		self.fc2 = nn.Linear(20, 10)
-		self.fc3 = nn.Linear(10, 20)
-		self.fc4 = nn.Linear(20, nb_moives)
-		self.activation = nn.sigmoid()
-
-	def forward(self, x):
-		x = self.activation(self.fc1(x))
-		x = self.activation(self.fc2(x))
-		x = self.activation(self.fc3(x))
-		x = self.fc4(x)  #decoding without activation
+    def __init__(self, ):
+        super(SAE, self).__init__()
+        self.fc1 = nn.Linear(nb_moives, 20)
+        self.fc2 = nn.Linear(20, 10)
+        self.fc3 = nn.Linear(10, 20)
+        self.fc4 = nn.Linear(20, nb_moives)
+        self.activation = nn.Sigmoid()
+    def forward(self, x):
+        x = self.activation(self.fc1(x))
+        x = self.activation(self.fc2(x))
+        x = self.activation(self.fc3(x))
+        x = self.fc4(x)
+        return x
 
 sae = SAE()
 criterion = nn.MSELoss()
-optimizer = optim.RMSprop(sae.parameters(), lr=0.01, weight_decay=0.5)
-
-epoch = 200
-for epoch in range(1, epoch+1):
-	train_loss = 0
-	s = 0.
-	for id_user in range(nb_users):
-		input = Variable(training_set[id_user]).unsqueeze(0)
-		target = input.clone()
-		if torch.sum(target.data > 0) > 0:
-			output = sec(input)
-			target.require_grad = False
-			output(target == 0 ) = 0
-			loss = criterion(output, target)
-			mean_corrector = nb_moives / float(torch.sum(target.data > 0) + 1e-10)
-			loss.backward()
-			train_loss += np.sqrt(loss.data[0]*mean_corrector)
-			s += 1.
-			optimizer.step()
-	print(epoch, loss)
+optimizer = optim.RMSprop(sae.parameters(), lr = 0.01, weight_decay = 0.5)
 
 
-	test_loss = 0
-	s = 0.
-	for id_user in range(nb_users):
-		input = Variable(training_set[id_user]).unsqueeze(0)
-		target = Variable(test_set[id_user]).
-		if torch.sum(target.data > 0) > 0:
-			output = sec(input)
-			target.require_grad = False
-			output(target == 0 ) = 0
-			loss = criterion(output, target)
-			mean_corrector = nb_moives / float(torch.sum(target.data > 0) + 1e-10)
-			test_loss += np.sqrt(loss.data[0]*mean_corrector)
-			s += 1.
-	print(epoch, loss)
+nb_epoch = 10
+for epoch in range(1, nb_epoch + 1):
+  train_loss = 0
+  s = 0.
+  for id_user in range(nb_users):
+    input = Variable(training_set[id_user]).unsqueeze(0)
+    target = input.clone()
+    if torch.sum(target.data > 0) > 0:
+      output = sae(input)
+      target.require_grad = False
+      output[target == 0] = 0
+      loss = criterion(output, target)
+      mean_corrector = nb_moives/float(torch.sum(target.data > 0) + 1e-10)
+      loss.backward()
+      train_loss += np.sqrt(loss.data*mean_corrector)
+      s += 1.
+      optimizer.step()
+  print('epoch: '+str(epoch)+'loss: '+ str(train_loss/s))
+
+test_loss = 0
+s = 0.
+for id_user in range(nb_users):
+    input = Variable(training_set[id_user]).unsqueeze(0)
+    target = Variable(test_set[id_user]).unsqueeze(0)
+    if torch.sum(target.data > 0) > 0:
+        output = sae(input)
+        target.require_grad = False
+        output[target == 0 ] = 0
+        loss = criterion(output, target)
+        mean_corrector = nb_moives / float(torch.sum(target.data > 0) + 1e-10)
+        test_loss += np.sqrt(loss.data*mean_corrector)
+        s += 1.
+print(epoch, loss)
 
 
