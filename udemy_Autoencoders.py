@@ -105,3 +105,15 @@ for id_user in range(nb_users):
 print(epoch, loss)
 
 
+#auto-encoders MIT
+''''
+input-compress-expand-input(hat)
+encoder-decoder, minimize (input(hat)-input);
+denoise;neural inpainting; 
+
+VAE:
+input-compress(mean, std)-expand-distribution(input)
+loss: reconstruction loss - stay close to normal(0,1)  #force laten distribution close to normal
+GANS-conditional GANS-cycleGAN
+
+'''
